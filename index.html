@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Clickmaster — Калькулятор ремонта</title>
+<title>ClickMaster — Калькулятор ремонта</title>
 <!-- Подключаем библиотеку для PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -13,11 +13,11 @@
          background: #f4f6f8; color: #1f2937; line-height: 1.5; padding-bottom: 20px; }
   /* Шапка с брендингом */
   header { background: #1e293b; color: #fff; padding: 24px 16px; text-align: center; }
-  .logo { display: inline-flex; align-items: center; justify-content: center;
-          width: 48px; height: 48px; background: #3b82f6; border-radius: 12px;
-          font-size: 28px; font-weight: 800; color: #fff; margin-right: 10px; vertical-align: middle; }
-  header h1 { font-size: 1.6rem; font-weight: 700; display: inline-block; vertical-align: middle; }
-  header .slogan { font-size: 0.95rem; opacity: 0.8; margin-top: 8px; }
+  .logo-icon { display: inline-flex; align-items: center; justify-content: center;
+               width: 52px; height: 52px; background: #3b82f6; border-radius: 14px;
+               margin-right: 12px; vertical-align: middle; font-size: 28px; }
+  header h1 { font-size: 1.6rem; font-weight: 700; display: inline-block; vertical-align: middle; letter-spacing: 1px; }
+  header .slogan { font-size: 0.95rem; opacity: 0.8; margin-top: 10px; }
   header .slogan span { display: inline-block; margin: 0 8px; }
   .wrap { max-width: 1200px; margin: 0 auto; padding: 16px; display: grid;
           grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
@@ -97,8 +97,8 @@
 
 <header>
   <div>
-    <span class="logo">C</span>
-    <h1>Clickmaster</h1>
+    <span class="logo-icon">🛠️</span>
+    <h1>ClickMaster</h1>
   </div>
   <div class="slogan">
     <span>Ремонт под ключ — прозрачно и точно</span>
@@ -270,4 +270,164 @@ const DATA = [
 ["Монтаж теплого пола водяного","м²",700],["Монтаж теплого пола электрического","м²",600],["Подключение системы теплого пола","комп.",3000],
 ["Опрессовка системы отопления","комп.",3000],["Установка вентиляционного клапана","пог.м",800],["Монтаж воздуховодов","пог.м",600],
 ["Монтаж вентиляционной решетки","шт",500],["Монтаж вытяжного вентилятора","шт",1200],["Монтаж приточного клапана","шт",1500],
-["Монтаж бытовой приточно-вытяжной установки
+["Монтаж бытовой приточно-вытяжной установки","шт",8000],["Монтаж обратного клапана вентиляции","шт",800]
+]},
+{title:"15. Завершающие работы", items:[
+["Установка дверных ограничителей","шт",300],["Монтаж декоративных накладок","шт",400],["Установка карнизов для штор","пог.м",500],
+["Монтаж жалюзи","шт",800],["Монтаж рулонных штор","шт",1000],["Установка зеркал","шт",1500],
+["Монтаж аксессуаров для ванной комнаты","шт",500],["Установка держателей полотенец","шт",400],["Установка крючков и вешалок","шт",200],
+["Монтаж мебельных ручек","шт",150],["Сборка мебели","комп.",3000],["Установка кухонного гарнитура","комп.",8000],
+["Установка столешниц","пог.м",1500],["Установка декоративных элементов интерьера","шт",500],["Герметизация стыков и примыканий","пог.м",250],
+["Удаление остатков строительного материала","м²",100],["Финальная уборка помещения","м²",150],["Мытье окон","м²",200],
+["Вынос строительного мусора","м²",120]
+]}
+];
+
+/* ================= НАСТРОЙКИ ================= */
+const FORMSPREE_ID = 'ВАШ_ID'; // <-- замените на свой ID из formspree.io
+
+/* ================= РЕНДЕР ================= */
+const catalog = document.getElementById("catalog");
+DATA.forEach((section, si) => {
+  const sec = document.createElement("div");
+  sec.className = "section" + (si === 0 ? " open" : "");
+  sec.innerHTML = `
+    <div class="section-head"><span>${section.title}</span><span class="arrow">▶</span></div>
+    <div class="section-body">
+      ${section.items.map((it, ii) => `
+        <div class="item">
+          <label>
+            <input type="checkbox" data-si="${si}" data-ii="${ii}">
+            <span>${it[0]} <span class="unit">(${it[1]})</span></span>
+          </label>
+          <input type="number" class="qty" min="0" step="0.1" value="1" disabled data-si="${si}" data-ii="${ii}">
+          <span class="price">${it[2].toLocaleString("ru-RU")} ₽<small>/${it[1]}</small></span>
+        </div>`).join("")}
+    </div>`;
+  sec.querySelector(".section-head").addEventListener("click", () => sec.classList.toggle("open"));
+  catalog.appendChild(sec);
+});
+
+/* ================= СМЕТА ================= */
+const cartList = document.getElementById("cartList");
+const totalSum = document.getElementById("totalSum");
+
+function toggleCart() {
+  if (window.innerWidth <= 900) {
+    document.getElementById("cartPanel").classList.toggle("collapsed");
+  }
+}
+
+function renderCart() {
+  const chosen = [...document.querySelectorAll("input[type=checkbox]:checked")];
+  cartList.innerHTML = "";
+  let total = 0;
+  if (chosen.length === 0) {
+    cartList.innerHTML = '<div class="cart-empty">Пока ничего не выбрано</div>';
+  } else {
+    chosen.forEach(cb => {
+      const si = +cb.dataset.si, ii = +cb.dataset.ii;
+      const item = DATA[si].items[ii];
+      const qtyInput = document.querySelector(`.qty[data-si="${si}"][data-ii="${ii}"]`);
+      const qty = parseFloat(qtyInput.value) || 0;
+      const sum = item[2] * qty;
+      total += sum;
+      const row = document.createElement("div");
+      row.className = "cart-item";
+      row.innerHTML = `<span>${item[0]}<br><small>${qty} ${item[1]} × ${item[2].toLocaleString("ru-RU")} ₽</small></span><span>${sum.toLocaleString("ru-RU")} ₽</span>`;
+      cartList.appendChild(row);
+    });
+  }
+  totalSum.textContent = total.toLocaleString("ru-RU") + " ₽";
+  return { chosen, total };
+}
+
+document.addEventListener("change", e => {
+  if (e.target.matches("input[type=checkbox]")) {
+    const si = e.target.dataset.si, ii = e.target.dataset.ii;
+    const qty = document.querySelector(`.qty[data-si="${si}"][data-ii="${ii}"]`);
+    qty.disabled = !e.target.checked;
+    renderCart();
+  }
+  if (e.target.matches(".qty")) renderCart();
+});
+document.addEventListener("input", e => { if (e.target.matches(".qty")) renderCart(); });
+
+/* ================= PDF ================= */
+function downloadPDF() {
+  const { chosen, total } = renderCart();
+  if (chosen.length === 0) { alert("Выберите хотя бы одну работу."); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(18);
+  doc.text("ClickMaster — Смета на ремонт", 14, 20);
+  doc.setFontSize(10);
+  doc.text("Предварительная стоимость. Точная — после замера.", 14, 28);
+  const rows = [];
+  chosen.forEach(cb => {
+    const si = +cb.dataset.si, ii = +cb.dataset.ii;
+    const item = DATA[si].items[ii];
+    const qty = parseFloat(document.querySelector(`.qty[data-si="${si}"][data-ii="${ii}"]`).value) || 0;
+    rows.push([item[0], qty + " " + item[1], item[2] + " ₽", (item[2]*qty).toLocaleString("ru-RU") + " ₽"]);
+  });
+  doc.autoTable({
+    startY: 34,
+    head: [["Работа", "Объём", "Цена за ед.", "Сумма"]],
+    body: rows,
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [37, 99, 235] },
+  });
+  const finalY = doc.lastAutoTable.finalY + 10;
+  doc.setFontSize(14);
+  doc.text("Итого: " + total.toLocaleString("ru-RU") + " ₽", 14, finalY);
+  doc.save("clickmaster-smeta.pdf");
+}
+
+/* ================= ЗАЯВКА ================= */
+function openRequestModal() {
+  const { chosen } = renderCart();
+  if (chosen.length === 0) { alert("Сначала выберите хотя бы одну работу."); return; }
+  document.getElementById("requestModal").classList.add("active");
+  document.getElementById("formStatus").textContent = "";
+}
+function closeRequestModal() {
+  document.getElementById("requestModal").classList.remove("active");
+}
+document.getElementById("requestForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+  const { chosen, total } = renderCart();
+  const name = document.getElementById("clientName").value;
+  const contact = document.getElementById("clientPhone").value;
+  let worksText = "";
+  chosen.forEach(cb => {
+    const si = +cb.dataset.si, ii = +cb.dataset.ii;
+    const item = DATA[si].items[ii];
+    const qty = parseFloat(document.querySelector(`.qty[data-si="${si}"][data-ii="${ii}"]`).value) || 0;
+    worksText += `${item[0]} — ${qty} ${item[1]} = ${(item[2]*qty).toLocaleString("ru-RU")} ₽\n`;
+  });
+  const statusEl = document.getElementById("formStatus");
+  statusEl.textContent = "Отправка...";
+  try {
+    const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, contact, works: worksText, total: total.toLocaleString("ru-RU") + " ₽" })
+    });
+    if (res.ok) {
+      statusEl.style.color = "green";
+      statusEl.textContent = "Заявка отправлена! Мы свяжемся с вами.";
+      setTimeout(() => { closeRequestModal(); }, 2000);
+    } else {
+      statusEl.style.color = "red";
+      statusEl.textContent = "Ошибка отправки. Попробуйте позже.";
+    }
+  } catch (err) {
+    statusEl.style.color = "red";
+    statusEl.textContent = "Ошибка сети. Проверьте соединение.";
+  }
+});
+
+renderCart();
+</script>
+</body>
+</html>
