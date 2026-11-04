@@ -3,21 +3,91 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ClickMaster — Калькулятор ремонта</title>
+<title>ClickMaster — Ремонт квартир под ключ</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-         background: #f4f6f8; color: #1f2937; line-height: 1.5; padding-bottom: 20px; }
-  header { background: #1e293b; color: #fff; padding: 24px 16px; text-align: center; }
+         color: #1f2937; line-height: 1.6;
+         background: #eef2f7;
+         background-image:
+           radial-gradient(circle at 15% 20%, rgba(37,99,235,0.08) 0%, transparent 40%),
+           radial-gradient(circle at 85% 10%, rgba(16,185,129,0.08) 0%, transparent 35%),
+           radial-gradient(circle at 70% 80%, rgba(59,130,246,0.07) 0%, transparent 45%),
+           linear-gradient(180deg, #f4f6f8 0%, #e8eef6 100%);
+         background-attachment: fixed; }
+  a { text-decoration: none; }
+
+  /* ===== Общая шапка ===== */
+  header { background: #1e293b; color: #fff; padding: 18px 16px; position: relative;
+           box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
+  .header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 12px; cursor: pointer; }
   .logo-icon { display: inline-flex; align-items: center; justify-content: center;
-               width: 52px; height: 52px; background: #3b82f6; border-radius: 14px;
-               margin-right: 12px; vertical-align: middle; font-size: 28px; }
-  header h1 { font-size: 1.6rem; font-weight: 700; display: inline-block; vertical-align: middle; letter-spacing: 1px; }
-  header .slogan { font-size: 0.95rem; opacity: 0.8; margin-top: 10px; }
-  header .slogan span { display: inline-block; margin: 0 8px; }
-  .wrap { max-width: 1200px; margin: 0 auto; padding: 16px; display: grid;
-          grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
-  @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
+               width: 44px; height: 44px; background: #3b82f6; border-radius: 12px; font-size: 24px; }
+  .brand h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: 1px; }
+  header nav a { color: #fff; opacity: 0.85; font-size: 0.95rem; margin-left: 20px; cursor: pointer; }
+  header nav a:hover { opacity: 1; text-decoration: underline; }
+
+  /* ===== Страницы ===== */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ===== Главная ===== */
+  .hero { background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+          color: #fff; padding: 70px 16px 80px; text-align: center; }
+  .hero h2 { font-size: 2.1rem; font-weight: 700; max-width: 800px; margin: 0 auto 16px; line-height: 1.25; }
+  .hero p { font-size: 1.1rem; opacity: 0.85; max-width: 620px; margin: 0 auto 32px; }
+  .hero .slogan { font-size: 0.95rem; opacity: 0.7; margin-bottom: 8px; letter-spacing: 0.5px; }
+  .btn-cta { display: inline-block; background: #2563eb; color: #fff;
+             padding: 16px 40px; border-radius: 10px; font-size: 1.1rem;
+             font-weight: 600; transition: background 0.2s, transform 0.2s; border: none; cursor: pointer; }
+  .btn-cta:hover { background: #1d4ed8; transform: translateY(-2px); }
+
+  /* ===== Почему мы (в стиле заметок) ===== */
+  .why { padding: 60px 16px; }
+  .why-inner { max-width: 1100px; margin: 0 auto; }
+  .why h2 { text-align: center; font-size: 1.8rem; margin-bottom: 12px; }
+  .why .subtitle { text-align: center; color: #6b7280; margin-bottom: 40px; }
+  .why-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px; }
+  .why-card { position: relative; background: #fff; border-radius: 4px 14px 14px 14px;
+              padding: 26px 24px 24px; box-shadow: 0 4px 18px rgba(0,0,0,0.07);
+              border-left: 5px solid #2563eb; transition: transform 0.2s, box-shadow 0.2s; }
+  .why-card:hover { transform: translateY(-4px); box-shadow: 0 8px 26px rgba(37,99,235,0.16); }
+  .why-card::before { content: ""; position: absolute; top: -10px; left: 0; width: 60px; height: 10px;
+                      background: #fbbf24; border-radius: 4px 4px 0 0; }
+  .why-card .num { display: inline-flex; align-items: center; justify-content: center;
+                   width: 34px; height: 34px; background: #dbeafe; color: #2563eb;
+                   border-radius: 50%; font-weight: 700; margin-bottom: 12px; }
+  .why-card h3 { font-size: 1.05rem; margin-bottom: 6px; }
+  .why-card p { font-size: 0.92rem; color: #6b7280; }
+
+  /* ===== Как работаем ===== */
+  .steps { padding: 60px 16px; }
+  .steps-inner { max-width: 1100px; margin: 0 auto; }
+  .steps h2 { text-align: center; font-size: 1.8rem; margin-bottom: 12px; }
+  .steps .subtitle { text-align: center; color: #6b7280; margin-bottom: 40px; }
+  .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+  .step { background: #fff; border-radius: 12px; padding: 24px; text-align: center;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+  .step .circle { display: inline-flex; align-items: center; justify-content: center;
+                  width: 48px; height: 48px; background: #2563eb; color: #fff;
+                  border-radius: 50%; font-size: 1.3rem; font-weight: 700; margin-bottom: 12px; }
+  .step h3 { font-size: 1rem; margin-bottom: 6px; }
+  .step p { font-size: 0.9rem; color: #6b7280; }
+
+  /* ===== CTA-блок ===== */
+  .cta-block { background: #1e293b; color: #fff; padding: 60px 16px; text-align: center; }
+  .cta-block h2 { font-size: 1.8rem; margin-bottom: 12px; }
+  .cta-block p { opacity: 0.8; margin-bottom: 28px; max-width: 600px; margin-left: auto; margin-right: auto; }
+
+  /* ===== Подвал ===== */
+  footer { background: #0f172a; color: #94a3b8; padding: 28px 16px; text-align: center; font-size: 0.9rem; }
+  footer a { color: #cbd5e1; cursor: pointer; }
+
+  /* ===== Калькулятор ===== */
+  .calc-wrap { max-width: 1200px; margin: 0 auto; padding: 16px; display: grid;
+               grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .calc-wrap { grid-template-columns: 1fr; } }
   .section { background: #fff; border-radius: 10px; margin-bottom: 10px;
              box-shadow: 0 1px 3px rgba(0,0,0,.08); overflow: hidden; }
   .section-head { display: flex; justify-content: space-between; align-items: center;
@@ -85,37 +155,104 @@
   .modal .btn-cancel { background: #e5e7eb; color: #1f2937; }
   .modal .btn-cancel:hover { background: #d1d5db; }
   .status-msg { font-size: 0.85rem; margin-top: 8px; text-align: center; }
+
+  @media (max-width: 600px) {
+    .hero h2 { font-size: 1.5rem; }
+    .hero p { font-size: 1rem; }
+    .btn-cta { display: block; margin: 0 auto; width: 100%; max-width: 320px; }
+    header nav a { display: none; }
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <div>
-    <span class="logo-icon">🛠️</span>
-    <h1>ClickMaster</h1>
-  </div>
-  <div class="slogan">
-    <span>Ремонт под ключ — прозрачно и точно</span>
-    <span>•</span>
-    <span>Считайте сами, доверяйте профессионалам</span>
+  <div class="header-inner">
+    <div class="brand" onclick="showPage('home')">
+      <span class="logo-icon">🛠️</span>
+      <h1>ClickMaster</h1>
+    </div>
+    <nav>
+      <a onclick="showPage('home')">Главная</a>
+      <a onclick="showPage('calc')">Калькулятор</a>
+    </nav>
   </div>
 </header>
 
-<div class="wrap">
-  <main id="catalog"></main>
-  <aside class="cart collapsed" id="cartPanel">
-    <div class="cart-header" onclick="toggleCart()">
-      <h2>Ваша смета</h2>
-      <span class="toggle-icon">▲</span>
-    </div>
-    <div class="cart-list" id="cartList"><div class="cart-empty">Пока ничего не выбрано</div></div>
-    <div class="cart-total"><span>Итого:</span><span class="sum" id="totalSum">0 ₽</span></div>
-    <button class="btn" onclick="openRequestModal()">Оставить заявку</button>
-    <button class="btn btn-pdf" onclick="downloadPDF()">Скачать PDF</button>
-    <div class="note">Предварительная стоимость. Точная — после замера.</div>
-  </aside>
-</div>
+<!-- ============ СТРАНИЦА 1: ГЛАВНАЯ ============ -->
+<section class="page active" id="page-home">
+  <div class="hero">
+    <div class="slogan">Ремонт под ключ — прозрачно и точно</div>
+    <h2>Ремонт квартиры без сюрпризов в смете и скрытых доплат</h2>
+    <p>Считайте стоимость сами за пару минут. Мы покажем каждую позицию, каждый чек и каждый этап — вы всегда знаете, за что платите.</p>
+    <button class="btn-cta" onclick="showPage('calc')">Рассчитать смету →</button>
+  </div>
 
+  <!-- Почему мы (в стиле заметок) -->
+  <section class="why" id="why">
+    <div class="why-inner">
+      <h2>Почему стоит выбрать ClickMaster</h2>
+      <p class="subtitle">Мы убрали из ремонта всё, что вызывает у клиентов стресс</p>
+      <div class="why-grid">
+        <div class="why-card"><div class="num">1</div><h3>Чеки на все материалы</h3><p>Вы получаете полный отчёт по закупкам с чеками. Никаких «материалы подорожали» — только реальные цены.</p></div>
+        <div class="why-card"><div class="num">2</div><h3>Контроль на расстоянии</h3><p>Фото и видео хода работ по запросу. Можно контролировать ремонт из другого города или страны.</p></div>
+        <div class="why-card"><div class="num">3</div><h3>Фиксированная смета</h3><p>Стоимость работ согласовывается до старта и не меняется в процессе. Все изменения — только по вашему согласию.</p></div>
+        <div class="why-card"><div class="num">4</div><h3>Опытные мастера</h3><p>Работаем с проверенными бригадами. Каждый этап — под контролем прораба.</p></div>
+        <div class="why-card"><div class="num">5</div><h3>Прозрачный договор</h3><p>Все обязательства зафиксированы в договоре. Никаких «устных договорённостей» и скрытых условий.</p></div>
+        <div class="why-card"><div class="num">6</div><h3>Гарантия на работы</h3><p>Даём гарантию на выполненные работы. Если что-то пойдёт не так — исправим за свой счёт.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Как работаем -->
+  <section class="steps">
+    <div class="steps-inner">
+      <h2>Как мы работаем</h2>
+      <p class="subtitle">Прозрачный процесс от заявки до сдачи объекта</p>
+      <div class="steps-grid">
+        <div class="step"><div class="circle">1</div><h3>Расчёт сметы</h3><p>Вы выбираете работы в калькуляторе и видите предварительную стоимость.</p></div>
+        <div class="step"><div class="circle">2</div><h3>Замер и уточнение</h3><p>Приезжаем на объект, уточняем объёмы и фиксируем финальную смету.</p></div>
+        <div class="step"><div class="circle">3</div><h3>Ремонт</h3><p>Выполняем работы по графику. Присылаем фото- и видеоотчёт по запросу.</p></div>
+        <div class="step"><div class="circle">4</div><h3>Сдача и отчёт</h3><p>Сдаём объект, передаём чеки на материалы и гарантию на работы.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-block">
+    <h2>Готовы узнать стоимость ремонта?</h2>
+    <p>Выберите нужные работы в калькуляторе — стоимость посчитается автоматически. Это займёт пару минут.</p>
+    <button class="btn-cta" onclick="showPage('calc')">Перейти к калькулятору →</button>
+  </section>
+
+  <footer>
+    <p>© ClickMaster — ремонт квартир под ключ. <a onclick="showPage('calc')">Калькулятор сметы</a></p>
+  </footer>
+</section>
+
+<!-- ============ СТРАНИЦА 2: КАЛЬКУЛЯТОР ============ -->
+<section class="page" id="page-calc">
+  <div style="text-align:center; padding:20px 16px 0;">
+    <h2 style="font-size:1.4rem; color:#1e293b;">Калькулятор ремонта</h2>
+    <p style="color:#6b7280; font-size:0.95rem;">Отметьте работы и укажите объём — стоимость посчитается автоматически</p>
+  </div>
+
+  <div class="calc-wrap">
+    <main id="catalog"></main>
+    <aside class="cart collapsed" id="cartPanel">
+      <div class="cart-header" onclick="toggleCart()">
+        <h2>Ваша смета</h2>
+        <span class="toggle-icon">▲</span>
+      </div>
+      <div class="cart-list" id="cartList"><div class="cart-empty">Пока ничего не выбрано</div></div>
+      <div class="cart-total"><span>Итого:</span><span class="sum" id="totalSum">0 ₽</span></div>
+      <button class="btn" onclick="openRequestModal()">Оставить заявку</button>
+      <button class="btn btn-pdf" onclick="downloadPDF()">Скачать PDF</button>
+      <div class="note">Предварительная стоимость. Точная — после замера.</div>
+    </aside>
+  </div>
+</section>
+
+<!-- Модальное окно заявки -->
 <div class="modal-overlay" id="requestModal">
   <div class="modal">
     <h3>Оставить заявку</h3>
@@ -135,6 +272,13 @@
 </div>
 
 <script>
+/* ================= ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ ================= */
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 /* ================= ДАННЫЕ ================= */
 const DATA = [
 {title:"1. Демонтажные работы", items:[
@@ -282,7 +426,7 @@ const FORMSPREE_ID = 'ВАШ_ID'; // <-- замените на свой ID из 
 const catalog = document.getElementById("catalog");
 DATA.forEach((section, si) => {
   const sec = document.createElement("div");
-  sec.className = "section" + (si === 0 ? " open" : "");
+  sec.className = "section"; // все разделы свёрнуты по умолчанию
   sec.innerHTML = `
     <div class="section-head"><span>${section.title}</span><span class="arrow">▶</span></div>
     <div class="section-body">
@@ -345,7 +489,7 @@ document.addEventListener("change", e => {
 });
 document.addEventListener("input", e => { if (e.target.matches(".qty")) renderCart(); });
 
-/* ================= PDF (через печать HTML — кириллица работает) ================= */
+/* ================= PDF (через печать HTML) ================= */
 function downloadPDF() {
   const { chosen, total } = renderCart();
   if (chosen.length === 0) { alert("Выберите хотя бы одну работу."); return; }
