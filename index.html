@@ -3,14 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Калькулятор ремонта квартиры</title>
+<title>Clickmaster — Калькулятор ремонта</title>
+<!-- Подключаем библиотеку для PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-         background: #f4f6f8; color: #1f2937; line-height: 1.5; padding-bottom: 120px; }
-  header { background: #1f2937; color: #fff; padding: 20px 16px; text-align: center; }
-  header h1 { font-size: 1.4rem; font-weight: 600; }
-  header p { font-size: .9rem; opacity: .8; margin-top: 4px; }
+         background: #f4f6f8; color: #1f2937; line-height: 1.5; padding-bottom: 20px; }
+  /* Шапка с брендингом */
+  header { background: #1e293b; color: #fff; padding: 24px 16px; text-align: center; }
+  .logo { display: inline-flex; align-items: center; justify-content: center;
+          width: 48px; height: 48px; background: #3b82f6; border-radius: 12px;
+          font-size: 28px; font-weight: 800; color: #fff; margin-right: 10px; vertical-align: middle; }
+  header h1 { font-size: 1.6rem; font-weight: 700; display: inline-block; vertical-align: middle; }
+  header .slogan { font-size: 0.95rem; opacity: 0.8; margin-top: 8px; }
+  header .slogan span { display: inline-block; margin: 0 8px; }
   .wrap { max-width: 1200px; margin: 0 auto; padding: 16px; display: grid;
           grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
   @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
@@ -32,6 +40,7 @@
   .qty { width: 72px; padding: 4px 6px; border: 1px solid #d1d5db; border-radius: 6px; font-size: .9rem; }
   .qty:disabled { background: #f3f4f6; color: #9ca3af; }
   .price { font-weight: 600; white-space: nowrap; color: #2563eb; min-width: 90px; text-align: right; }
+  /* Панель сметы (десктоп) */
   .cart { position: sticky; top: 16px; background: #fff; border-radius: 10px;
           padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
   .cart h2 { font-size: 1.1rem; margin-bottom: 10px; }
@@ -46,38 +55,95 @@
   .cart-total .sum { color: #2563eb; }
   .btn { width: 100%; background: #2563eb; color: #fff; border: none;
          padding: 12px; border-radius: 8px; font-size: 1rem; font-weight: 600;
-         cursor: pointer; margin-top: 12px; }
+         cursor: pointer; margin-top: 8px; }
   .btn:hover { background: #1d4ed8; }
-  .note { font-size: .78rem; color: #6b7280; margin-top: 8px; text-align: center; }
+  .btn-pdf { background: #10b981; }
+  .btn-pdf:hover { background: #059669; }
+  /* Мобильная панель сметы (сворачиваемая) */
   @media (max-width: 900px) {
     .cart { position: fixed; left: 0; right: 0; bottom: 0; top: auto;
-            border-radius: 12px 12px 0 0; max-height: 62vh; overflow-y: auto; z-index: 50; }
-    body { padding-bottom: 0; }
+            border-radius: 16px 16px 0 0; max-height: 70vh; overflow-y: auto;
+            z-index: 50; transition: max-height 0.3s; padding: 12px 16px; }
+    .cart.collapsed { max-height: 90px; overflow: hidden; }
+    .cart.collapsed .cart-list,
+    .cart.collapsed .btn-pdf,
+    .cart.collapsed .note { display: none; }
+    .cart-header { display: flex; justify-content: space-between; align-items: center;
+                   cursor: pointer; margin-bottom: 8px; }
+    .cart-header h2 { margin: 0; font-size: 1rem; }
+    .cart-header .toggle-icon { font-size: 1.2rem; transition: transform 0.3s; }
+    .cart.collapsed .cart-header .toggle-icon { transform: rotate(180deg); }
+    .cart-total { border-top: none; padding-top: 0; margin-top: 0; font-size: 1rem; }
+    .cart-total .sum { font-size: 1.1rem; }
+    .btn { padding: 10px; margin-top: 6px; font-size: 0.95rem; }
   }
+  /* Модальное окно заявки */
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                   background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.active { display: flex; }
+  .modal { background: #fff; border-radius: 12px; padding: 24px; max-width: 400px;
+           width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+  .modal h3 { margin-bottom: 16px; }
+  .modal label { display: block; margin-bottom: 4px; font-size: 0.9rem; font-weight: 500; }
+  .modal input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 12px; }
+  .modal .modal-actions { display: flex; gap: 10px; margin-top: 8px; }
+  .modal .modal-actions button { flex: 1; }
+  .modal .btn-cancel { background: #e5e7eb; color: #1f2937; }
+  .modal .btn-cancel:hover { background: #d1d5db; }
+  .status-msg { font-size: 0.85rem; margin-top: 8px; text-align: center; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Калькулятор ремонта квартиры</h1>
-  <p>Отметьте работы и укажите объём — стоимость посчитается автоматически</p>
+  <div>
+    <span class="logo">C</span>
+    <h1>Clickmaster</h1>
+  </div>
+  <div class="slogan">
+    <span>Ремонт под ключ — прозрачно и точно</span>
+    <span>•</span>
+    <span>Считайте сами, доверяйте профессионалам</span>
+  </div>
 </header>
 
 <div class="wrap">
   <main id="catalog"></main>
-  <aside class="cart">
-    <h2>Ваша смета</h2>
+  <!-- Панель сметы -->
+  <aside class="cart collapsed" id="cartPanel">
+    <div class="cart-header" onclick="toggleCart()">
+      <h2>Ваша смета</h2>
+      <span class="toggle-icon">▲</span>
+    </div>
     <div class="cart-list" id="cartList"><div class="cart-empty">Пока ничего не выбрано</div></div>
     <div class="cart-total"><span>Итого:</span><span class="sum" id="totalSum">0 ₽</span></div>
-    <button class="btn" onclick="submitEstimate()">Оставить заявку</button>
+    <button class="btn" onclick="openRequestModal()">Оставить заявку</button>
+    <button class="btn btn-pdf" onclick="downloadPDF()">Скачать PDF</button>
     <div class="note">Предварительная стоимость. Точная — после замера.</div>
   </aside>
 </div>
 
+<!-- Модальное окно заявки -->
+<div class="modal-overlay" id="requestModal">
+  <div class="modal">
+    <h3>Оставить заявку</h3>
+    <p style="font-size:0.9rem; color:#6b7280; margin-bottom:16px;">Мы свяжемся с вами для уточнения деталей и точной сметы.</p>
+    <form id="requestForm">
+      <label for="clientName">Ваше имя</label>
+      <input type="text" id="clientName" name="name" required placeholder="Иван">
+      <label for="clientPhone">Телефон или Email</label>
+      <input type="text" id="clientPhone" name="contact" required placeholder="+7 900 123-45-67">
+      <div class="modal-actions">
+        <button type="button" class="btn btn-cancel" onclick="closeRequestModal()">Отмена</button>
+        <button type="submit" class="btn">Отправить</button>
+      </div>
+      <div class="status-msg" id="formStatus"></div>
+    </form>
+  </div>
+</div>
+
 <script>
-/* ================= ДАННЫЕ =================
-   [название, единица, цена за единицу]
-   Меняйте цены здесь. */
+/* ================= ДАННЫЕ ================= */
 const DATA = [
 {title:"1. Демонтажные работы", items:[
 ["Демонтаж обоев","м²",150],["Демонтаж штукатурки","м²",250],["Демонтаж шпатлевки","м²",180],
@@ -204,96 +270,4 @@ const DATA = [
 ["Монтаж теплого пола водяного","м²",700],["Монтаж теплого пола электрического","м²",600],["Подключение системы теплого пола","комп.",3000],
 ["Опрессовка системы отопления","комп.",3000],["Установка вентиляционного клапана","пог.м",800],["Монтаж воздуховодов","пог.м",600],
 ["Монтаж вентиляционной решетки","шт",500],["Монтаж вытяжного вентилятора","шт",1200],["Монтаж приточного клапана","шт",1500],
-["Монтаж бытовой приточно-вытяжной установки","шт",8000],["Монтаж обратного клапана вентиляции","шт",800]
-]},
-{title:"15. Завершающие работы", items:[
-["Установка дверных ограничителей","шт",300],["Монтаж декоративных накладок","шт",400],["Установка карнизов для штор","пог.м",500],
-["Монтаж жалюзи","шт",800],["Монтаж рулонных штор","шт",1000],["Установка зеркал","шт",1500],
-["Монтаж аксессуаров для ванной комнаты","шт",500],["Установка держателей полотенец","шт",400],["Установка крючков и вешалок","шт",200],
-["Монтаж мебельных ручек","шт",150],["Сборка мебели","комп.",3000],["Установка кухонного гарнитура","комп.",8000],
-["Установка столешниц","пог.м",1500],["Установка декоративных элементов интерьера","шт",500],["Герметизация стыков и примыканий","пог.м",250],
-["Удаление остатков строительного материала","м²",100],["Финальная уборка помещения","м²",150],["Мытье окон","м²",200],
-["Вынос строительного мусора","м²",120]
-]}
-];
-
-/* ================= РЕНДЕР ================= */
-const catalog = document.getElementById("catalog");
-DATA.forEach((section, si) => {
-  const sec = document.createElement("div");
-  sec.className = "section" + (si === 0 ? " open" : "");
-  sec.innerHTML = `
-    <div class="section-head"><span>${section.title}</span><span class="arrow">▶</span></div>
-    <div class="section-body">
-      ${section.items.map((it, ii) => `
-        <div class="item">
-          <label>
-            <input type="checkbox" data-si="${si}" data-ii="${ii}">
-            <span>${it[0]} <span class="unit">(${it[1]})</span></span>
-          </label>
-          <input type="number" class="qty" min="0" step="0.1" value="1" disabled data-si="${si}" data-ii="${ii}">
-          <span class="price">${it[2].toLocaleString("ru-RU")} ₽<small>/${it[1]}</small></span>
-        </div>`).join("")}
-    </div>`;
-  sec.querySelector(".section-head").addEventListener("click", () => sec.classList.toggle("open"));
-  catalog.appendChild(sec);
-});
-
-/* ================= СМЕТА ================= */
-const cartList = document.getElementById("cartList");
-const totalSum = document.getElementById("totalSum");
-
-function renderCart() {
-  const chosen = [...document.querySelectorAll("input[type=checkbox]:checked")];
-  cartList.innerHTML = "";
-  let total = 0;
-  if (chosen.length === 0) {
-    cartList.innerHTML = '<div class="cart-empty">Пока ничего не выбрано</div>';
-  } else {
-    chosen.forEach(cb => {
-      const si = +cb.dataset.si, ii = +cb.dataset.ii;
-      const item = DATA[si].items[ii];
-      const qtyInput = document.querySelector(`.qty[data-si="${si}"][data-ii="${ii}"]`);
-      const qty = parseFloat(qtyInput.value) || 0;
-      const sum = item[2] * qty;
-      total += sum;
-      const row = document.createElement("div");
-      row.className = "cart-item";
-      row.innerHTML = `<span>${item[0]}<br><small>${qty} ${item[1]} × ${item[2].toLocaleString("ru-RU")} ₽</small></span><span>${sum.toLocaleString("ru-RU")} ₽</span>`;
-      cartList.appendChild(row);
-    });
-  }
-  totalSum.textContent = total.toLocaleString("ru-RU") + " ₽";
-  return { chosen, total };
-}
-
-document.addEventListener("change", e => {
-  if (e.target.matches("input[type=checkbox]")) {
-    const si = e.target.dataset.si, ii = e.target.dataset.ii;
-    const qty = document.querySelector(`.qty[data-si="${si}"][data-ii="${ii}"]`);
-    qty.disabled = !e.target.checked;
-    renderCart();
-  }
-  if (e.target.matches(".qty")) renderCart();
-});
-document.addEventListener("input", e => { if (e.target.matches(".qty")) renderCart(); });
-
-function submitEstimate() {
-  const { chosen, total } = renderCart();
-  if (chosen.length === 0) { alert("Выберите хотя бы одну работу."); return; }
-  let text = "Предварительная смета:\n\n";
-  chosen.forEach(cb => {
-    const si = +cb.dataset.si, ii = +cb.dataset.ii;
-    const item = DATA[si].items[ii];
-    const qty = parseFloat(document.querySelector(`.qty[data-si="${si}"][data-ii="${ii}"]`).value) || 0;
-    text += `• ${item[0]} — ${qty} ${item[1]} × ${item[2]} = ${(item[2]*qty).toLocaleString("ru-RU")} ₽\n`;
-  });
-  text += `\nИТОГО: ${total.toLocaleString("ru-RU")} ₽`;
-  alert(text);
-  // TODO: отправка заявки (email/Telegram) — подключим отдельно
-}
-
-renderCart();
-</script>
-</body>
-</html>
+["Монтаж бытовой приточно-вытяжной установки
